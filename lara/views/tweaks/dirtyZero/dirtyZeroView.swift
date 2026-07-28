@@ -15,14 +15,14 @@ struct dirtyZeroView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section(header: HeaderLabel(text: "Actions", icon: "wrench.and.screwdriver"), footer: Text("All tweaks are done in memory, so if something goes wrong, please reboot your device. Made with love by [jailbreak.party](https://jailbreak.party). This section of tweaks is also available as a [seperate app!](https://github.com/jailbreakdotparty/dirtyZero)")) {
-                    Button("Apply Tweaks", action: {
+                Section(header: HeaderLabel(text: "操作", icon: "wrench.and.screwdriver"), footer: Text("所有修改都在内存中完成，如果出现问题，请重启设备。由 [jailbreak.party](https://jailbreak.party) 倾情制作。这部分功能也有[独立 App](https://github.com/jailbreakdotparty/dirtyZero)！")) {
+                    Button("应用所选功能", action: {
                         applyTweaks()
                     })
-                    Button("Respring", action: {
+                    Button("注销", action: {
                         mgr.respring()
                     })
-                    Toggle("Enable Risky Tweaks", isOn: $enableRiskyTweaks)
+                    Toggle("启用高风险功能", isOn: $enableRiskyTweaks)
                 }
                 
                 ListedTweaksSection
@@ -56,7 +56,7 @@ struct dirtyZeroView: View {
             }
         }
         
-        Alertinator.shared.alert(title: "Attempted to apply all tweaks!", body: "Please respring your device to see any changes. Zeroing files with DarkSword is finicky, so you may have to apply multiple times!", actionLabel: "Respring", action: {
+        Alertinator.shared.alert(title: "已尝试应用所有功能！", body: "请注销设备以查看更改。用 DarkSword 清零文件比较玄学，可能需要多应用几次！", actionLabel: "注销", action: {
             mgr.respring()
         })
     }

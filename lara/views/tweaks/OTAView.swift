@@ -8,31 +8,31 @@ struct OTAView: View {
 
     var body: some View {
         List {
-            Section(header: HeaderLabel(text: "Status", icon: "antenna.radiowaves.left.and.right")) {
+            Section(header: HeaderLabel(text: "状态", icon: "antenna.radiowaves.left.and.right")) {
                 HStack {
-                    Text("OTA Updates")
+                    Text("OTA 更新")
                     Spacer()
-                    Text(otaDisabled ? "Disabled" : "Enabled")
+                    Text(otaDisabled ? "已停用" : "已启用")
                         .foregroundColor(otaDisabled ? .red : .green)
                         .monospaced()
                 }
             }
 
             Section(
-                header: HeaderLabel(text: "Actions", icon: "wrench.and.screwdriver"),
-                footer: Text("Modifies launchd's disabled.plist via RemoteCall to prevent OTA update daemons from running. A reboot is required for changes to take effect.")
+                header: HeaderLabel(text: "操作", icon: "wrench.and.screwdriver"),
+                footer: Text("通过 RemoteCall 修改 launchd 的 disabled.plist，阻止 OTA 更新守护进程运行。更改需要重启设备后生效。")
             ) {
                 Button {
                     apply(disabled: true)
                 } label: {
                     if isWorking && !otaDisabled {
                         HStack {
-                            Text("Disabling…")
+                            Text("正在停用…")
                             Spacer()
                             ProgressView()
                         }
                     } else {
-                        Text("Disable OTA Updates")
+                        Text("停用 OTA 更新")
                     }
                 }
                 .disabled(isWorking || otaDisabled)
@@ -42,25 +42,25 @@ struct OTAView: View {
                 } label: {
                     if isWorking && otaDisabled {
                         HStack {
-                            Text("Enabling…")
+                            Text("正在启用…")
                             Spacer()
                             ProgressView()
                         }
                     } else {
-                        Text("Enable OTA Updates")
+                        Text("启用 OTA 更新")
                     }
                 }
                 .disabled(isWorking || !otaDisabled)
             }
         }
-        .navigationTitle("OTA Updates")
+        .navigationTitle("OTA 更新")
         .onAppear {
             if !otaDisabled {
                 syncStateFromPlist()
             }
         }
-        .alert("Result", isPresented: .constant(lastResult != nil)) {
-            Button("OK") { lastResult = nil }
+        .alert("结果", isPresented: .constant(lastResult != nil)) {
+            Button("好") { lastResult = nil }
         } message: {
             Text(lastResult ?? "")
         }
@@ -97,10 +97,10 @@ struct OTAView: View {
                 if ok {
                     otaDisabled = disabled
                     lastResult = disabled
-                        ? "OTA updates disabled. Reboot to apply."
-                        : "OTA updates enabled. Reboot to apply."
+                        ? "OTA 更新已停用。重启设备后生效。"
+                        : "OTA 更新已启用。重启设备后生效。"
                 } else {
-                    lastResult = "Operation failed. Check logs for details."
+                    lastResult = "操作失败。请查看日志了解详情。"
                 }
             }
         }

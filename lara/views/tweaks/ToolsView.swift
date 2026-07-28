@@ -45,10 +45,10 @@ struct ToolsView: View {
         List {
             if !mgr.dsready {
                 Section {
-                    Text("Kernel R/W is not ready. Run the exploit first.")
+                    Text("内核读写未就绪。请先运行漏洞利用。")
                         .foregroundColor(.secondary)
                 } header: {
-                    Text("Status")
+                    Text("状态")
                 }
             }
 
@@ -58,7 +58,7 @@ struct ToolsView: View {
                     
                     Spacer()
                     
-                    Text(isaslr ? "enabled" : "disabled")
+                    Text(isaslr ? "已启用" : "已停用")
                         .foregroundColor(isaslr ? Color.red : Color.green)
                         .monospaced()
                     
@@ -73,16 +73,16 @@ struct ToolsView: View {
                     toggleaslr()
                     isaslr = aslrstate
                 } label: {
-                    Text("Toggle ASLR")
+                    Text("切换 ASLR")
                 }
             } header: {
                 Text("ASLR")
             } footer: {
-                Text("Address Space Layout Randomization. Probably not useful for you.")
+                Text("地址空间布局随机化。对你来说可能没什么用。")
             }
             
             Section {
-                Button("Respring") {
+                Button("注销") {
                     mgr.respring()
                 }
                 
@@ -135,14 +135,14 @@ struct ToolsView: View {
                     }
                 }
             } header: {
-                Text("Process")
+                Text("进程")
             }
 
             Section {
                 HStack {
-                    Text("Process: ")
+                    Text("进程：")
                     Spacer()
-                    TextField("e.g. SpringBoard", text: $crashname)
+                    TextField("例如 SpringBoard", text: $crashname)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .foregroundColor(.secondary)
@@ -150,39 +150,39 @@ struct ToolsView: View {
                         .fixedSize(horizontal: true, vertical: false)
                 }
 
-                Button("Crash") {
+                Button("崩溃") {
                     crashname.withCString { cstr in
                         _ = crashproc(cstr)
                     }
                 }
                 .disabled(crashname.isEmpty)
             } header: {
-                Text("Crasher")
+                Text("崩溃工具")
             } footer: {
-                Text("Crashes the selected process")
+                Text("使指定的进程崩溃")
             }
 
             Section {
                 Button {
                     if mgr.PPHelper() {
-                        status = "Succeeded. Open the Pocket Poster app, open settings and tap Detect."
+                        status = "成功。打开 Pocket Poster 应用，进入设置并点击 Detect。"
                     } else {
-                        status = "Failed. Check logs."
+                        status = "失败。请查看日志。"
                     }
                 } label: {
-                    Text("Pocket Poster Helper")
+                    Text("Pocket Poster 助手")
                 }
                 .disabled(!mgr.sbxready)
             } header: {
                 Text("Pocket Poster")
             } footer: {
-                Text("Get the needed hashes for Pocket Poster without the need of a PC.")
+                Text("无需电脑即可获取 Pocket Poster 所需的哈希。")
             }
             
             Section {
                 HStack {
                     if showtoken {
-                        Text(mgr.sbxready ? "tkn" : "No Saved Token.")
+                        Text(mgr.sbxready ? "tkn" : "暂无已保存的 Token。")
                             .foregroundColor(.secondary)
                             .monospaced()
                     } else {
@@ -193,7 +193,7 @@ struct ToolsView: View {
                                 .lineLimit(1)
                                 .truncationMode(.middle)
                         } else {
-                            Text("No Saved Token.")
+                            Text("暂无已保存的 Token。")
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -212,13 +212,13 @@ struct ToolsView: View {
                         Button {
                             UIPasteboard.general.string = token
                         } label: {
-                            Label("Copy", systemImage: "doc.on.doc")
+                            Label("复制", systemImage: "doc.on.doc")
                         }
                     }
                 }
 
                 HStack {
-                    Text("Class:")
+                    Text("类：")
                     Spacer()
 
                     Picker(" ", selection: $issueclass) {
@@ -230,7 +230,7 @@ struct ToolsView: View {
                 }
 
                 HStack {
-                    Text("Path:")
+                    Text("路径：")
                     Spacer()
                     
                     TextField("/", text: $issuepath)
@@ -246,16 +246,16 @@ struct ToolsView: View {
                 Button {
                     token = mgr.sbxissuetoken(extClass: issueclass.rawValue, path: issuepath) ?? ""
                 } label: {
-                    Text("Issue Token")
+                    Text("签发 Token")
                 }
                 .disabled(!mgr.sbxready)
             } header: {
-                Text("Sandbox")
+                Text("沙盒")
             }
         }
-        .navigationTitle("Tools")
-        .alert("Status", isPresented: .constant(status != nil)) {
-                Button("OK") { status = nil }
+        .navigationTitle("工具")
+        .alert("状态", isPresented: .constant(status != nil)) {
+                Button("好") { status = nil }
             } message: {
                 Text(status ?? "")
             }

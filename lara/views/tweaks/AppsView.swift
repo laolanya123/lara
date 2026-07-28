@@ -233,7 +233,7 @@ struct AppsView: View {
         List {
             Section {
                 if scannedapps.isEmpty {
-                    Text("No apps found.")
+                    Text("未找到应用。")
                         .foregroundColor(.secondary)
                 } else {
                     ForEach(scannedapps) { app in
@@ -269,7 +269,7 @@ struct AppsView: View {
                     }
                 }
             } header: {
-                Text("Sideloaded Apps")
+                Text("侧载应用")
             }
 
             Section {
@@ -277,13 +277,13 @@ struct AppsView: View {
                     sbx3apbypass()
                     scanappssbx()
                 } label: {
-                    Text("Bypass 3 App Limit")
+                    Text("绕过 3 应用限制")
                 }
             } footer: {
-                Text("Needs to be reapplied everytime you sideload a new app.")
+                Text("每次侧载新应用后都需要重新应用。")
             }
         }
-        .navigationTitle("3 App Bypass")
+        .navigationTitle("3 应用限制绕过")
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {

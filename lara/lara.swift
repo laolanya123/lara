@@ -104,7 +104,7 @@ struct lara: App {
                     // thanks
                     mgr.hasOffsets = emergencyfixfunctiontobereplacedlateronquestionmark()
                 } else {
-                    Alertinator.shared.alert(title: "This device is not supported!", body: "We apologize, but this device is currently not supported by Lara. Possible reasons: \n- You are on an unsupported iOS version (Supported: iOS 16.0 - iOS 18.7.1, iOS 26.0 - iOS 26.0.1) \n- Your device has MIE (A19+ or M5+) \n- A debugger is attached.", actionLabel: "Exit App", action: { exitinator() })
+                    Alertinator.shared.alert(title: "此设备不受支持！", body: "很抱歉，Lara 目前不支持此设备。可能的原因：\n- iOS 版本不受支持（支持：iOS 16.0 - iOS 18.7.1、iOS 26.0 - iOS 26.0.1）\n- 设备带有 MIE（A19+ 或 M5+）\n- 有调试器附加。", actionLabel: "退出应用", action: { exitinator() })
                 }
             }
             .onChange(of: scenephase, perform: handleScenePhase)

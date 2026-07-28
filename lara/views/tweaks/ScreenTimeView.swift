@@ -16,26 +16,26 @@ struct ScreenTimeView: View {
 
     var body: some View {
         List {
-            Section(header: HeaderLabel(text: "Status", icon: "hourglass")) {
+            Section(header: HeaderLabel(text: "状态", icon: "hourglass")) {
                 HStack {
-                    Text("Screen Time")
+                    Text("屏幕使用时间")
                     Spacer()
-                    Text(screenTimeDisabled ? "Disabled" : "Enabled")
+                    Text(screenTimeDisabled ? "已停用" : "已启用")
                         .foregroundColor(screenTimeDisabled ? .red : .green)
                         .monospaced()
                 }
                 HStack {
-                    Text("Preferences backup")
+                    Text("偏好设置备份")
                     Spacer()
-                    Text(backupExists ? "Found" : "Not found")
+                    Text(backupExists ? "已找到" : "未找到")
                         .foregroundColor(backupExists ? .green : .secondary)
                         .monospaced()
                 }
             }
 
             Section(
-                header: HeaderLabel(text: "Daemons", icon: "gearshape.2"),
-                footer: Text("Select which daemons to disable. ScreenTimeAgent and UsageTrackingAgent are the minimum required to fully disable Screen Time.")
+                header: HeaderLabel(text: "守护进程", icon: "gearshape.2"),
+                footer: Text("选择要停用的守护进程。ScreenTimeAgent 和 UsageTrackingAgent 是完全停用屏幕使用时间所需的最小组合。")
             ) {
                 Toggle("ScreenTimeAgent", isOn: $killScreenTimeAgent)
                     .disabled(isWorking || screenTimeDisabled)
@@ -48,20 +48,20 @@ struct ScreenTimeView: View {
             }
 
             Section(
-                header: HeaderLabel(text: "Actions", icon: "wrench.and.screwdriver"),
-                footer: Text("Kills selected daemons, removes Screen Time preferences, and marks them as disabled in launchd's disabled.plist. A reboot is required for changes to take effect.")
+                header: HeaderLabel(text: "操作", icon: "wrench.and.screwdriver"),
+                footer: Text("结束选中的守护进程，删除屏幕使用时间偏好设置，并在 launchd 的 disabled.plist 中将其标记为停用。更改需要重启设备后生效。")
             ) {
                 Button {
                     applyDisable()
                 } label: {
                     if isWorking && !screenTimeDisabled {
                         HStack {
-                            Text("Disabling…")
+                            Text("正在停用…")
                             Spacer()
                             ProgressView()
                         }
                     } else {
-                        Text("Disable Screen Time")
+                        Text("停用屏幕使用时间")
                     }
                 }
                 .disabled(isWorking || screenTimeDisabled)
@@ -71,25 +71,25 @@ struct ScreenTimeView: View {
                 } label: {
                     if isWorking && screenTimeDisabled {
                         HStack {
-                            Text("Enabling…")
+                            Text("正在启用…")
                             Spacer()
                             ProgressView()
                         }
                     } else {
-                        Text("Enable Screen Time")
+                        Text("启用屏幕使用时间")
                     }
                 }
                 .disabled(isWorking || !screenTimeDisabled)
             }
         }
-        .navigationTitle("Screen Time")
+        .navigationTitle("屏幕使用时间")
         .onAppear {
             if !screenTimeDisabled {
                 syncStateFromPlist()
             }
         }
-        .alert("Result", isPresented: .constant(lastResult != nil)) {
-            Button("OK") { lastResult = nil }
+        .alert("结果", isPresented: .constant(lastResult != nil)) {
+            Button("好") { lastResult = nil }
         } message: {
             Text(lastResult ?? "")
         }
@@ -127,9 +127,9 @@ struct ScreenTimeView: View {
                 isWorking = false
                 if ok {
                     screenTimeDisabled = true
-                    lastResult = "Screen Time disabled. Reboot to apply."
+                    lastResult = "屏幕使用时间已停用。重启设备后生效。"
                 } else {
-                    lastResult = "Operation failed. Check logs for details."
+                    lastResult = "操作失败。请查看日志了解详情。"
                 }
             }
         }
@@ -143,9 +143,9 @@ struct ScreenTimeView: View {
                 isWorking = false
                 if ok {
                     screenTimeDisabled = false
-                    lastResult = "Screen Time enabled. Reboot to apply."
+                    lastResult = "屏幕使用时间已启用。重启设备后生效。"
                 } else {
-                    lastResult = "Operation failed. Check logs for details."
+                    lastResult = "操作失败。请查看日志了解详情。"
                 }
             }
         }

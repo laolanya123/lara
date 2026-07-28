@@ -19,12 +19,28 @@ enum fmAppsDisplayMode: String, CaseIterable {
     case UUID = "UUID"
     case bundleID = "Bundle ID"
     case appName = "App Name"
+
+    var label: String {
+        switch self {
+        case .UUID: return "UUID"
+        case .bundleID: return "Bundle ID"
+        case .appName: return "应用名称"
+        }
+    }
 }
 
 enum logsdisplaymode: String, CaseIterable {
     case tabs = "In Tabs"
     case toolbar = "In Toolbar"
     case content = "Directly in ContentView"
+
+    var label: String {
+        switch self {
+        case .tabs: return "在标签页中"
+        case .toolbar: return "在工具栏中"
+        case .content: return "直接显示在主页"
+        }
+    }
 }
 
 struct SettingsView: View {
@@ -53,12 +69,12 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section(header: HeaderLabel(text: "About", icon: "info.circle")) {
+                Section(header: HeaderLabel(text: "关于", icon: "info.circle")) {
                     AppInfoCell()
-                    NavigationLink("Credits", destination: CreditsView())
+                    NavigationLink("致谢", destination: CreditsView())
                 }
                 
-                Section(header: HeaderLabel(text: "Exploit", icon: "ant")) {
+                Section(header: HeaderLabel(text: "漏洞利用", icon: "ant")) {
                     Picker("", selection: $selectedMethod) {
                         ForEach(method.allCases, id: \.self) { method in
                             Text(method.rawValue).tag(method)
@@ -66,7 +82,7 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.segmented)
                     
-                    NavigationLink("Modify Offsets", destination: OffsetManagementView())
+                    NavigationLink("修改偏移", destination: OffsetManagementView())
                 }
                 
                 // kernelcache
@@ -97,12 +113,12 @@ struct SettingsView: View {
                         } label: {
                             if dlingkcache {
                                 HStack {
-                                    Text("Fetching Kernelcache...")
+                                    Text("正在获取 Kernelcache…")
                                     Spacer()
                                     ProgressView()
                                 }
                             } else {
-                                Text("Fetch Kernelcache")
+                                Text("获取 Kernelcache")
                             }
                         }
                         .disabled(dlingkcache || !mgr.dsready)
@@ -114,15 +130,15 @@ struct SettingsView: View {
                                 Image(systemName: "info.circle")
                             }
                         }) {
-                            Button("Import Kernelcache", action: {
+                            Button("导入 Kernelcache", action: {
                                 guard !importingkcache else { return }
                                 showkcacheimport = true
                             })
                             .disabled(dlingkcache || importingkcache)
                         }
                     } else {
-                        Button("Remove Kernelcache", action: {
-                            Alertinator.shared.alert(title: "Clear Kernelcache Data?", body: "This will delete all kernelcache data and remove saved offsets. You will have to refetch the data to use lara again.", actionLabel: "Confirm", action: {
+                        Button("删除 Kernelcache", action: {
+                            Alertinator.shared.alert(title: "清除 Kernelcache 数据？", body: "将删除所有 kernelcache 数据并移除已保存的偏移。之后需要重新获取数据才能使用 lara。", actionLabel: "确认", action: {
                                 clearKcacheData()
                             })
                         })
@@ -132,9 +148,9 @@ struct SettingsView: View {
                     HeaderLabel(text: "Kernelcache", icon: "cpu")
                 } footer: {
                     if (!mgr.hasOffsets && (!mgr.dsready || (!mgr.vfsready && !mgr.sbxready))) {
-                        Text("NOTE: You will have to click \"Run Exploit\" before you can fetch kernelcache.\n\nDeleting and refetching kernelcache may fix some issues. Try doing this before opening a GitHub issue or asking for support in our [Discord](https://discord.gg/gw8PcRF3Jr) server.")
+                        Text("注意：需要先点击\"运行漏洞利用\"才能获取 kernelcache。\n\n删除并重新获取 kernelcache 可能修复一些问题。在提交 GitHub issue 或到我们的 [Discord](https://discord.gg/gw8PcRF3Jr) 服务器寻求支持之前，请先尝试此方法。")
                     } else {
-                        Text("Deleting and refetching kernelcache may fix some issues. Try doing this before opening a GitHub issue or asking for support in our [Discord](https://discord.gg/gw8PcRF3Jr) server.")
+                        Text("删除并重新获取 kernelcache 可能修复一些问题。在提交 GitHub issue 或到我们的 [Discord](https://discord.gg/gw8PcRF3Jr) 服务器寻求支持之前，请先尝试此方法。")
                     }
                 }
                 
@@ -142,31 +158,31 @@ struct SettingsView: View {
                 if showkcachetips {
                     Section {
                         VStack(alignment: .leading, spacing: 0) {
-                            Text("How to obtain a kernelcache (macOS)")
+                            Text("如何获取 kernelcache（macOS）")
                                 .font(.footnote.weight(.semibold))
                                 .foregroundColor(.primary)
                             
-                            Text("1. Download the IPSW tool for your device.")
+                            Text("1. 下载适用于你设备的 IPSW 工具。")
                             Link("https://github.com/blacktop/ipsw/releases",
                                  destination: URL(string: "https://github.com/blacktop/ipsw/releases")!)
                             
-                            Text("2. Extract the archive.")
-                            Text("3. Open Terminal.")
-                            Text("4. Navigate to the extracted folder:")
+                            Text("2. 解压压缩包。")
+                            Text("3. 打开终端。")
+                            Text("4. 进入解压后的文件夹：")
                             Text("cd /path/to/ipsw_3.1.671_something_something/")
                                 .font(.system(.caption2, design: .monospaced))
                                 .textSelection(.enabled)
                                 .foregroundColor(.primary)
                             
-                            Text("5. Extract the kernel:")
+                            Text("5. 提取内核：")
                             Text("./ipsw extract --kernel [drag your ipsw here]")
                                 .font(.system(.caption2, design: .monospaced))
                                 .textSelection(.enabled)
                                 .foregroundColor(.primary)
                             
-                            Text("6. Get the kernelcache file.")
-                            Text("7. Transfer the kernelcache to your iCloud or iPhone.")
-                            Text("8. Tap the button above and select the kernelcache, for example kernelcache.release.iPhone14,3.")
+                            Text("6. 得到 kernelcache 文件。")
+                            Text("7. 将 kernelcache 传输到你的 iCloud 或 iPhone。")
+                            Text("8. 点击上方按钮并选择 kernelcache，例如 kernelcache.release.iPhone14,3。")
                         }
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -174,8 +190,8 @@ struct SettingsView: View {
                     }
                 }
                 
-                Section(header: HeaderLabel(text: "App", icon: "gearshape"), footer: Text("If keep alive is enabled, the app will continue running even if it is minimized.")) {
-                    Toggle("Keep Alive", isOn: $keepAlive)
+                Section(header: HeaderLabel(text: "应用", icon: "gearshape"), footer: Text("启用保持运行后，即使应用退到后台也会继续运行。")) {
+                    Toggle("保持运行", isOn: $keepAlive)
                         .onChange(of: keepAlive) { _ in
                             if keepAlive {
                                 if !kaenabled { toggleka() }
@@ -183,40 +199,40 @@ struct SettingsView: View {
                                 if kaenabled { toggleka() }
                             }
                         }
-                    Toggle("Disable Log Dividers", isOn: $loggerNoBS)
-                    Picker("Logs Display", selection: $selectedlogdisplaymode) {
+                    Toggle("禁用日志分隔线", isOn: $loggerNoBS)
+                    Picker("日志显示方式", selection: $selectedlogdisplaymode) {
                         ForEach(logsdisplaymode.allCases, id: \.self) { mode in
-                            Text(mode.rawValue).tag(mode)
+                            Text(mode.label).tag(mode)
                         }
                     }
                     .pickerStyle(.menu)
                 }
                 
-                Section(header: HeaderLabel(text: "File Manager", icon: "folder"), footer: Text("Display Mode lets you change the way app folders get displayed in the file manager.")) {
-                    Picker("Display Mode", selection: $selectedFMAppsDisplayMode) {
+                Section(header: HeaderLabel(text: "文件管理器", icon: "folder"), footer: Text("显示方式用于更改文件管理器中应用文件夹的显示形式。")) {
+                    Picker("显示方式", selection: $selectedFMAppsDisplayMode) {
                         ForEach(fmAppsDisplayMode.allCases, id: \.self) { mode in
-                            Text(mode.rawValue).tag(mode)
+                            Text(mode.label).tag(mode)
                         }
                     }
                     .pickerStyle(.menu)
-                    Toggle("Recursive Search in File Manager", isOn: $fmRecursiveSearch)
-                    Toggle("Show File Manager in Tabs", isOn: $showFMInTabs)
+                    Toggle("在文件管理器中递归搜索", isOn: $fmRecursiveSearch)
+                    Toggle("在标签页中显示文件管理器", isOn: $showFMInTabs)
                 }
                 
                 #if !DISABLE_REMOTECALL
                 Section(header: HeaderLabel(text: "RemoteCall", icon: "syringe")) {
-                    Toggle("Stash KRW primitives", isOn: $stashKRW)
+                    Toggle("暂存 KRW 原语", isOn: $stashKRW)
                         .onChange(of: stashKRW) { enabled in
                             if enabled && isIOS16() {
                                 Alertinator.shared.alert(
-                                    title: "iOS 16 Warning",
-                                    body: "Saving KRW on iOS 16 is currently unstable. If it fails, manually stash KRW a few more times."
+                                    title: "iOS 16 警告",
+                                    body: "在 iOS 16 上保存 KRW 目前不稳定。如果失败，请手动多试几次暂存 KRW。"
                                 )
                             }
                         }
                     if isIOS16() {
-                        Toggle("Keep SpringBoard RemoteCall alive in background", isOn: $keepSpringBoardRemoteCallAliveIOS16)
-                        Text("Warning: If Lara exits while RemoteCall is active, SpringBoard may respring.")
+                        Toggle("在后台保持 SpringBoard RemoteCall", isOn: $keepSpringBoardRemoteCallAliveIOS16)
+                        Text("警告：如果 RemoteCall 处于激活状态时 Lara 退出，SpringBoard 可能会注销。")
                             .font(.footnote.weight(.semibold))
                             .foregroundColor(.red)
 
@@ -227,13 +243,13 @@ struct SettingsView: View {
                                 stashingKRWNow = false
                                 if success {
                                     Alertinator.shared.alert(
-                                        title: "KRW Stashed",
-                                        body: "KRW primitives were successfully stashed to launchd."
+                                        title: "KRW 已暂存",
+                                        body: "KRW 原语已成功暂存到 launchd。"
                                     )
                                 } else {
-                                    let error = mgr.rcLastError ?? "Please try manually stashing KRW a few more times."
+                                    let error = mgr.rcLastError ?? "请手动多试几次暂存 KRW。"
                                     Alertinator.shared.alert(
-                                        title: "Failed to Stash KRW",
+                                        title: "暂存 KRW 失败",
                                         body: error
                                     )
                                 }
@@ -241,21 +257,21 @@ struct SettingsView: View {
                         } label: {
                             if stashingKRWNow {
                                 HStack {
-                                    Text("Stashing KRW to launchd...")
+                                    Text("正在暂存 KRW 到 launchd…")
                                     Spacer()
                                     ProgressView()
                                 }
                             } else {
-                                Text("Stash KRW to launchd now")
+                                Text("立即暂存 KRW 到 launchd")
                             }
                         }
                         .disabled(!mgr.dsready || mgr.rcrunning || stashingKRWNow)
                     }
-                    Toggle("Allow >10 dock icons", isOn: $rcDockUnlimited)
+                    Toggle("允许 Dock 图标超过 10 个", isOn: $rcDockUnlimited)
                 }
                 #endif
             }
-            .navigationTitle("Settings")
+            .navigationTitle("设置")
             .fileImporter(isPresented: $showkcacheimport, allowedContentTypes: [.data], allowsMultipleSelection: false) { result in
                 switch result {
                 case .success(let urls):

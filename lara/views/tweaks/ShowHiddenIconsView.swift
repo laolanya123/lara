@@ -19,39 +19,39 @@ struct ShowHiddenIconsView: View {
     var body: some View {
         List {
             Section(
-                header: HeaderLabel(text: "Home Screen", icon: "app.badge"),
-                footer: Text("Inspired by Nugget's \"Show Hidden Icons on Home Screen\" tweak. Writes SBIconVisibility to GlobalPreferences. This may not take effect until SpringBoard's Application State DB is rebuilt.")
+                header: HeaderLabel(text: "主屏幕", icon: "app.badge"),
+                footer: Text("灵感来自 Nugget 的\"显示主屏幕隐藏图标\"功能。写入 GlobalPreferences 的 SBIconVisibility。可能需要重建 SpringBoard 的 Application State DB 后才会生效。")
             ) {
-                Toggle("Show Hidden Icons", isOn: Binding(
+                Toggle("显示隐藏图标", isOn: Binding(
                     get: { isEnabled },
                     set: { setEnabled($0) }
                 ))
                 .disabled(isLoading || !canWrite)
 
                 HStack {
-                    Text("Preference")
+                    Text("偏好设置")
                     Spacer()
-                    Text(isEnabled ? "Enabled" : "Disabled")
+                    Text(isEnabled ? "已启用" : "已停用")
                         .foregroundColor(isEnabled ? .green : .secondary)
                         .monospaced()
                 }
             }
 
             Section(
-                header: HeaderLabel(text: "Actions", icon: "wrench.and.screwdriver"),
-                footer: Text("Refresh only reloads the current SBIconVisibility value from GlobalPreferences. It does not rebuild SpringBoard caches.")
+                header: HeaderLabel(text: "操作", icon: "wrench.and.screwdriver"),
+                footer: Text("刷新只会重新读取 GlobalPreferences 中 SBIconVisibility 的当前值，不会重建 SpringBoard 缓存。")
             ) {
                 Button {
                     loadState()
                 } label: {
                     if isLoading {
                         HStack {
-                            Text("Refreshing...")
+                            Text("正在刷新…")
                             Spacer()
                             ProgressView()
                         }
                     } else {
-                        Text("Refresh Preference State")
+                        Text("刷新偏好状态")
                     }
                 }
                 .disabled(isLoading || !canWrite)
@@ -60,7 +60,7 @@ struct ShowHiddenIconsView: View {
                     Button(role: .destructive) {
                         reset()
                     } label: {
-                        Text("Remove Preference")
+                        Text("移除偏好设置")
                     }
                     .disabled(isLoading || !canWrite)
 
@@ -68,8 +68,8 @@ struct ShowHiddenIconsView: View {
 
                     Button {
                         Alertinator.shared.alert(
-                            title: "Remove Preference",
-                            body: "Deletes the SBIconVisibility key from GlobalPreferences instead of writing false. This restores the default preference value. If SpringBoard has already cached the old state, you may still need to rebuild the Application State DB and reboot."
+                            title: "移除偏好设置",
+                            body: "从 GlobalPreferences 中删除 SBIconVisibility 键（而非写入 false），恢复默认偏好值。如果 SpringBoard 已缓存旧状态，可能仍需重建 Application State DB 并重启。"
                         )
                     } label: {
                         Image(systemName: "info.circle")
@@ -82,7 +82,7 @@ struct ShowHiddenIconsView: View {
                     Button(role: .destructive) {
                         confirmRebuildDB = true
                     } label: {
-                        Text("Rebuild Application State DB")
+                        Text("重建 Application State DB")
                     }
                     .disabled(isLoading || !canWrite)
 
@@ -90,8 +90,8 @@ struct ShowHiddenIconsView: View {
 
                     Button {
                         Alertinator.shared.alert(
-                            title: "Rebuild Application State DB",
-                            body: "Clears SpringBoard's applicationState.db, applicationState.db-wal, and applicationState.db-shm so SpringBoard rebuilds them. Reboot after applying. Respring may leave SpringBoard on a black screen, and some widget configuration may be lost."
+                            title: "重建 Application State DB",
+                            body: "清除 SpringBoard 的 applicationState.db、applicationState.db-wal 和 applicationState.db-shm，让 SpringBoard 重新构建。应用后请重启设备。注销可能导致 SpringBoard 黑屏，且部分小组件配置可能丢失。"
                         )
                     } label: {
                         Image(systemName: "info.circle")
@@ -101,22 +101,22 @@ struct ShowHiddenIconsView: View {
                 }
             }
         }
-        .navigationTitle("Show Hidden Icons")
+        .navigationTitle("显示隐藏图标")
         .onAppear {
             loadState()
         }
-        .alert("Show Hidden Icons", isPresented: .constant(status != nil)) {
-            Button("OK") { status = nil }
+        .alert("显示隐藏图标", isPresented: .constant(status != nil)) {
+            Button("好") { status = nil }
         } message: {
             Text(status ?? "")
         }
-        .alert("Rebuild Application State DB?", isPresented: $confirmRebuildDB) {
-            Button("Cancel", role: .cancel) {}
-            Button("Rebuild", role: .destructive) {
+        .alert("重建 Application State DB？", isPresented: $confirmRebuildDB) {
+            Button("取消", role: .cancel) {}
+            Button("重建", role: .destructive) {
                 rebuildApplicationStateDB()
             }
         } message: {
-            Text("This matches Nugget's \"Rebuild SpringBoard Application State DB\" option. It replaces SpringBoard's applicationState.db with an empty file so SpringBoard can rebuild it. You should reboot the device after applying. Respring may leave SpringBoard on a black screen. Rebuilding this DB can also reset some app/widget state, including widget configuration. Continue only if you accept that risk.")
+            Text("与 Nugget 的\"Rebuild SpringBoard Application State DB\"选项等效。用空文件替换 SpringBoard 的 applicationState.db，使其重新构建。应用后应重启设备。注销可能导致 SpringBoard 黑屏。重建该数据库还可能重置部分应用/小组件状态，包括小组件配置。确认接受该风险后再继续。")
         }
     }
 
@@ -126,7 +126,7 @@ struct ShowHiddenIconsView: View {
 
     private func loadState() {
         guard canWrite else {
-            status = "Sandbox escape or VFS is not ready."
+            status = "沙盒逃逸或 VFS 未就绪。"
             return
         }
 
@@ -143,7 +143,7 @@ struct ShowHiddenIconsView: View {
 
     private func setEnabled(_ enabled: Bool) {
         guard canWrite else {
-            status = "Sandbox escape or VFS is not ready."
+            status = "沙盒逃逸或 VFS 未就绪。"
             return
         }
 
@@ -159,8 +159,8 @@ struct ShowHiddenIconsView: View {
         if result.ok {
             isEnabled = enabled
             status = enabled
-                ? "SBIconVisibility enabled. If there is no visible effect, you may need to rebuild SpringBoard's Application State DB, then reboot the device."
-                : "SBIconVisibility preference removed. If there is no visible effect, rebuild SpringBoard's Application State DB, then reboot the device."
+                ? "SBIconVisibility 已启用。如果没有明显效果，可能需要重建 SpringBoard 的 Application State DB，然后重启设备。"
+                : "SBIconVisibility 偏好已移除。如果没有明显效果，请重建 SpringBoard 的 Application State DB，然后重启设备。"
         } else {
             status = result.message
             loadState()
@@ -173,7 +173,7 @@ struct ShowHiddenIconsView: View {
 
     private func rebuildApplicationStateDB() {
         guard canWrite else {
-            status = "Sandbox escape or VFS is not ready."
+            status = "沙盒逃逸或 VFS 未就绪。"
             return
         }
 
@@ -195,7 +195,7 @@ struct ShowHiddenIconsView: View {
         }
 
         if failures.isEmpty {
-            status = "Application State DB cleared. Reboot the device now. Do not rely on respring; it may leave SpringBoard on a black screen. Some widget configuration may be lost."
+            status = "Application State DB 已清除。请立即重启设备。不要依赖注销——它可能导致 SpringBoard 黑屏。部分小组件配置可能丢失。"
         } else {
             status = failures.joined(separator: "\n")
         }

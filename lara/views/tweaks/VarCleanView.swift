@@ -40,10 +40,10 @@ struct VarCleanView: View {
 
     var body: some View {
         List {
-            Section("Status") {
+            Section("状态") {
                 Text(cleanupok
-                     ? "Cleanup enabled via sandbox escape."
-                     : "Detection only. Escape the sandbox to delete matched paths.")
+                     ? "已通过沙盒逃逸启用清理。"
+                     : "仅可检测。逃逸沙盒后才能删除匹配路径。")
                     .foregroundColor(.secondary)
 
                 if let statusmsg, !statusmsg.isEmpty {
@@ -54,8 +54,8 @@ struct VarCleanView: View {
             }
 
             if groups.isEmpty && !isrefreshing {
-                Section("Matches") {
-                    Text("No blacklisted residue from VarCleanRules.json was found.")
+                Section("匹配项") {
+                    Text("未发现 VarCleanRules.json 中的黑名单残留。")
                         .foregroundColor(.secondary)
                 }
             } else {
@@ -105,12 +105,12 @@ struct VarCleanView: View {
                 }
                 .disabled(isrefreshing || isdeleting)
 
-                Button(selectedcount == 0 ? "Select All" : "Clear") {
+                Button(selectedcount == 0 ? "全选" : "取消选择") {
                     toggleselection()
                 }
                 .disabled(!cleanupok || groups.isEmpty || isdeleting)
 
-                Button("Clean") {
+                Button("清理") {
                     showdeleteconfirm = true
                 }
                 .disabled(!cleanupok || selectedcount == 0 || isdeleting)
@@ -119,13 +119,13 @@ struct VarCleanView: View {
         .task {
             await refresh()
         }
-        .alert("Delete Selected Items?", isPresented: $showdeleteconfirm) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
+        .alert("删除选中项？", isPresented: $showdeleteconfirm) {
+            Button("取消", role: .cancel) {}
+            Button("删除", role: .destructive) {
                 Task { await deleteselected() }
             }
         } message: {
-            Text("Delete \(selectedcount) matched path\(selectedcount == 1 ? "" : "s")?")
+            Text("删除 \(selectedcount) 个匹配路径？")
         }
     }
 
@@ -153,7 +153,7 @@ struct VarCleanView: View {
             statusmsg = nil
         } else {
             let matchcount = groups.reduce(0) { $0 + $1.items.count }
-            statusmsg = "Found \(matchcount) matched path\(matchcount == 1 ? "" : "s")."
+            statusmsg = "找到 \(matchcount) 个匹配路径。"
         }
     }
 
@@ -185,9 +185,9 @@ struct VarCleanView: View {
         }
 
         if failures.isEmpty {
-            statusmsg = "Deleted \(deletedcount) path\(deletedcount == 1 ? "" : "s")."
+            statusmsg = "已删除 \(deletedcount) 个路径。"
         } else {
-            statusmsg = "Deleted \(deletedcount) path\(deletedcount == 1 ? "" : "s"), failed \(failures.count)."
+            statusmsg = "已删除 \(deletedcount) 个路径，失败 \(failures.count) 个。"
         }
 
         await refresh()

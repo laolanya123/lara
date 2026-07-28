@@ -40,7 +40,7 @@ struct LogsView: View {
                     }
                 }
             }
-            .navigationTitle("Logs")
+            .navigationTitle("日志")
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     ShareLink(item: logsURL) {
