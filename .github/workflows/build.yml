@@ -3,106 +3,48 @@ name: build
 on:
   push:
     branches: [ main ]
-  pull_request:
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   build:
-    runs-on: macos-26
+    runs-on: macos-15
+    timeout-minutes: 30
 
     steps:
       - name: checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: setup xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
+      - name: list available Xcode versions
+        run: ls -d /Applications/Xcode* 2>/dev/null || true
 
-      - name: show xcode version
-        run: xcodebuild -version
-
-      - name: install ldid
-        run: brew install ldid
-
-      - name: build
+      - name: select latest stable Xcode
         run: |
-          chmod +x scripts/build_ipa.sh
-          ./scripts/build_ipa.sh
+          XCODE_APP=$(ls -d /Applications/Xcode_*.app /Applications/Xcode.app 2>/dev/null \
+            | grep -vi beta \
+            | sort -V \
+            | tail -n 1)
+          if [ -z "$XCODE_APP" ]; then
+            echo "No stable Xcode found, falling back to default"
+            XCODE_APP="/Applications/Xcode.app"
+          fi
+          echo "Selecting: $XCODE_APP"
+          sudo xcode-select -s "$XCODE_APP/Contents/Developer"
+          xcodebuild -version
 
-      - name: upload artifact (PR only)
-        if: github.event_name == 'pull_request'
+      - name: build ipa
+        run: bash ipabuild.sh
+
+      - name: verify lara.ipa exists
+        run: |
+          if [ ! -f lara.ipa ]; then
+            echo "lara.ipa was not produced"
+            exit 1
+          fi
+          ls -lh lara.ipa
+
+      - name: upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: lara-ipa
-          path: |
-            build/lara.ipa
-            build/xcodebuild.log
-
-      - name: upload release ipa
-        if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-ipa
-          path: build/lara.ipa
-
-
-  release:
-    if: github.event_name != 'pull_request'
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: download ipa
-        uses: actions/download-artifact@v4
-        with:
-          name: release-ipa
-          path: build/
-
-      - name: get last 12h commits
-        run: |
-          COMMITS=$(git log --since="12 hours ago" --pretty=format:"- %h %s (%an)")
-          if [ -z "$COMMITS" ]; then
-            COMMITS="no commits in the last 12 hours"
-          fi
-
-          echo "COMMITS<<EOF" >> $GITHUB_ENV
-          echo "$COMMITS" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      - name: write release notes
-        run: |
-          cat <<EOF > release_notes.txt
-          lara nightly build
-          
-          Last 12 hours commits:
-          
-          ${COMMITS}
-          EOF
-
-      - name: update nightly release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release view nightly >/dev/null 2>&1 || \
-          gh release create nightly \
-            --title "Nightly" \
-            --notes "initial nightly" \
-            --prerelease
-      
-          gh release edit nightly \
-            --title "Nightly" \
-            --notes-file release_notes.txt \
-            --prerelease
-      
-          gh release upload nightly build/lara.ipa --clobber
+          path: lara.ipa
+          retention-days: 14
