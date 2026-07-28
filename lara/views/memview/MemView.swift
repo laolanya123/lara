@@ -15,11 +15,6 @@ struct memproc: Identifiable, Hashable {
     let name: String
 }
 
-struct hextarget: Identifiable, Hashable {
-    let id = UUID()
-    let address: UInt64
-}
-
 func memview_parsehex(_ s: String) -> UInt64? {
     var t = s.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     if t.hasPrefix("0x") { t.removeFirst(2) }

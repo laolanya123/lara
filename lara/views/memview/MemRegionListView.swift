@@ -23,7 +23,8 @@ struct MemRegionListView: View {
     @State private var loading = true
     @State private var busy = false
     @State private var jumptext = ""
-    @State private var hexdest: hextarget?
+    @State private var showhex = false
+    @State private var hexaddr: UInt64 = 0
     @State private var status: String?
 
     var body: some View {
@@ -59,7 +60,7 @@ struct MemRegionListView: View {
                         .font(.system(.body, design: .monospaced))
                     Button("跳转") {
                         if let addr = memview_parsehex(jumptext) {
-                            hexdest = hextarget(address: addr)
+                            openhex(at: addr)
                         }
                     }
                     .disabled(vmmap == 0 || memview_parsehex(jumptext) == nil)
@@ -96,7 +97,7 @@ struct MemRegionListView: View {
                 } else {
                     ForEach(regions) { r in
                         Button {
-                            hexdest = hextarget(address: r.start)
+                            openhex(at: r.start)
                         } label: {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(String(format: "0x%011llx - 0x%011llx", r.start, r.end))
@@ -114,10 +115,15 @@ struct MemRegionListView: View {
             }
         }
         .navigationTitle(proc.name)
-        .navigationDestination(item: $hexdest) { dest in
-            MemHexView(vmmap: vmmap, address: dest.address)
+        .navigationDestination(isPresented: $showhex) {
+            MemHexView(vmmap: vmmap, address: hexaddr)
         }
         .onAppear(perform: load)
+    }
+
+    private func openhex(at address: UInt64) {
+        hexaddr = address
+        showhex = true
     }
 
     private func load() {
@@ -155,7 +161,7 @@ struct MemRegionListView: View {
             DispatchQueue.main.async {
                 busy = false
                 if base != 0 {
-                    hexdest = hextarget(address: base)
+                    openhex(at: base)
                 } else {
                     status = "未找到主 Mach-O 基址。"
                 }
