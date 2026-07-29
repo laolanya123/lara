@@ -9,7 +9,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 enum taboptions {
-    case applying, tweaks, files, logs, memview
+    case applying, tweaks, files, logs, memview, hwbp
 }
 
 let g_isunsupported: Bool = isunsupported()
@@ -58,6 +58,13 @@ struct lara: App {
                         Text("内存")
                     }
                     .tag(taboptions.memview)
+
+                HWBPView()
+                    .tabItem {
+                        Image(systemName: "bolt")
+                        Text("断点")
+                    }
+                    .tag(taboptions.hwbp)
                 
                 // this has gotta fucking go
                 TweaksView(mgr: mgr)

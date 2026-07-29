@@ -10,6 +10,7 @@
 #import "offsets.h"
 #import "utils.h"
 #import "memview_bridge.h"
+#import "hwbp_bridge.h"
 #import "vnode.h"
 #import "apfs.h"
 #import "vfs.h"
