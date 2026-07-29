@@ -85,6 +85,12 @@ struct MemRegionListView: View {
             }
 
             Section {
+                MemHookView(vmmap: vmmap)
+            } header: {
+                Text("功能")
+            }
+
+            Section {
                 if loading {
                     HStack {
                         Text("加载区域中…")

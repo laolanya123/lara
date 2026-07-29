@@ -4,7 +4,8 @@
 //
 //  Hex + ASCII dump of remote process memory, 16 bytes per row,
 //  one display page (0x400 bytes) at a time. Reads happen on a
-//  background thread via mv_read_remote().
+//  background thread via mv_read_remote(); long-pressing a byte
+//  opens an editor that writes back via mv_write_remote().
 //
 
 import SwiftUI
@@ -14,11 +15,23 @@ struct MemHexView: View {
 
     @State private var address: UInt64
     @State private var addrtext: String
-    @State private var lines: [String] = []
+    @State private var bytes: [UInt8] = []
+    @State private var bytecount = 0
     @State private var loading = false
     @State private var status: String?
 
+    @State private var editTarget: EditTarget?
+    @State private var edittext = ""
+    @State private var editerror: String?
+    @State private var writing = false
+
     private let pagesize: UInt64 = 0x400
+
+    private struct EditTarget: Identifiable {
+        let id = UUID()
+        let addr: UInt64
+        let current: UInt8
+    }
 
     init(vmmap: UInt64, address: UInt64) {
         self.vmmap = vmmap
@@ -56,14 +69,19 @@ struct MemHexView: View {
             }
 
             ScrollView {
-                Text(lines.joined(separator: "\n"))
-                    .font(.system(size: 12, design: .monospaced))
-                    .lineSpacing(1)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
-                    .padding(.bottom, 8)
+                LazyVStack(alignment: .leading, spacing: 1) {
+                    ForEach(0..<rowcount, id: \.self) { row in
+                        hexrow(row)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 4)
             }
+
+            Text("长按字节可编辑写入")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .padding(.bottom, 2)
 
             HStack {
                 Button {
@@ -102,6 +120,120 @@ struct MemHexView: View {
         .onAppear {
             read()
         }
+        .sheet(item: $editTarget, onDismiss: { editerror = nil }) { target in
+            editsheet(target)
+        }
+    }
+
+    private var rowcount: Int { (bytecount + 15) / 16 }
+
+    @ViewBuilder
+    private func hexrow(_ row: Int) -> some View {
+        HStack(spacing: 0) {
+            Text(String(format: "0x%010llx  ", address + UInt64(row * 16)))
+                .foregroundColor(.secondary)
+            ForEach(0..<16, id: \.self) { i in
+                let idx = row * 16 + i
+                if idx < bytecount {
+                    Text(String(format: "%02x ", bytes[idx]))
+                        .foregroundColor(.primary)
+                        .onLongPressGesture {
+                            edittext = String(format: "%02x", bytes[idx])
+                            editerror = nil
+                            editTarget = EditTarget(addr: address + UInt64(idx), current: bytes[idx])
+                        }
+                } else {
+                    Text("   ")
+                }
+                if i == 7 { Text(" ") }
+            }
+            Text(" " + ascii(row))
+                .foregroundColor(.secondary)
+        }
+        .font(.system(size: 12, design: .monospaced))
+    }
+
+    private func ascii(_ row: Int) -> String {
+        var out = ""
+        for i in 0..<16 {
+            let idx = row * 16 + i
+            if idx >= bytecount { break }
+            let b = bytes[idx]
+            out += (b >= 0x20 && b < 0x7f) ? String(UnicodeScalar(b)) : "."
+        }
+        return out
+    }
+
+    @ViewBuilder
+    private func editsheet(_ target: EditTarget) -> some View {
+        VStack(spacing: 16) {
+            Text("写入内存")
+                .font(.headline)
+            Text(String(format: "地址 0x%llx（当前 %02x）", target.addr, target.current))
+                .font(.system(.footnote, design: .monospaced))
+                .foregroundColor(.secondary)
+            TextField("十六进制字节，如 90 或 1f 20 03 d5", text: $edittext)
+                .keyboardType(.asciiCapable)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .font(.system(.body, design: .monospaced))
+                .textFieldStyle(.roundedBorder)
+            if let editerror {
+                Text(editerror)
+                    .font(.footnote)
+                    .foregroundColor(.red)
+            }
+            HStack {
+                Button("取消") {
+                    editTarget = nil
+                }
+                .disabled(writing)
+                Spacer()
+                if writing { ProgressView() }
+                Button("写入") {
+                    commit(target)
+                }
+                .disabled(writing || parsehexbytes(edittext) == nil)
+            }
+        }
+        .padding()
+        .presentationDetents([.height(240)])
+    }
+
+    private func parsehexbytes(_ s: String) -> [UInt8]? {
+        var t = s.lowercased().replacingOccurrences(of: "0x", with: "")
+        t = t.filter { !$0.isWhitespace && $0 != "," }
+        guard !t.isEmpty, t.count % 2 == 0, t.count <= 128 else { return nil }
+        var out: [UInt8] = []
+        var i = t.startIndex
+        while i < t.endIndex {
+            let j = t.index(i, offsetBy: 2)
+            guard let b = UInt8(t[i..<j], radix: 16) else { return nil }
+            out.append(b)
+            i = j
+        }
+        return out
+    }
+
+    private func commit(_ target: EditTarget) {
+        guard let data = parsehexbytes(edittext) else { return }
+        writing = true
+        editerror = nil
+        DispatchQueue.global(qos: .userInitiated).async {
+            let n = data.withUnsafeBufferPointer { ptr -> Int in
+                guard let base = ptr.baseAddress else { return 0 }
+                return mv_write_remote(vmmap, target.addr, base, data.count)
+            }
+            DispatchQueue.main.async {
+                writing = false
+                if n == data.count {
+                    editTarget = nil
+                    read()
+                } else {
+                    editerror = "写入失败（\(n)/\(data.count) 字节）：页面不可写或映射失败。"
+                }
+            }
+        }
     }
 
     private func read() {
@@ -116,38 +248,14 @@ struct MemHexView: View {
                 guard let base = ptr.baseAddress else { return 0 }
                 return mv_read_remote(vmmap, addr, base, size)
             }
-            let newlines = hexlines(data: buf, base: addr, count: n)
             DispatchQueue.main.async {
-                lines = newlines
+                bytes = buf
+                bytecount = n
                 loading = false
                 if n == 0 {
                     status = "读取失败（KRW 未就绪或参数无效）。"
                 }
             }
         }
-    }
-
-    private func hexlines(data: [UInt8], base: UInt64, count: Int) -> [String] {
-        var out: [String] = []
-        out.reserveCapacity(count / 16 + 1)
-        var off = 0
-        while off < count {
-            let rowcount = min(16, count - off)
-            var hexpart = ""
-            var asciipart = ""
-            for i in 0..<16 {
-                if i < rowcount {
-                    let b = data[off + i]
-                    hexpart += String(format: "%02x ", b)
-                    asciipart += (b >= 0x20 && b < 0x7f) ? String(UnicodeScalar(b)) : "."
-                } else {
-                    hexpart += "   "
-                }
-                if i == 7 { hexpart += " " }
-            }
-            out.append(String(format: "0x%010llx  ", base + UInt64(off)) + hexpart + " " + asciipart)
-            off += rowcount
-        }
-        return out
     }
 }
