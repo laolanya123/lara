@@ -308,7 +308,7 @@ struct HWBPRegsView: View {
                 let sp = regs[31]
                 let vmmap = mv_vm_map_for_pid(pid)
                 if vmmap != 0 && sp != 0 {
-                    stackBase = sp & ~0xFULL
+                    stackBase = sp & ~UInt64(0xF)
                     var buf = [UInt8](repeating: 0, count: 0x80)
                     let n = mv_read_remote(vmmap, stackBase, &buf, buf.count)
                     if n == buf.count {
