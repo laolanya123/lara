@@ -9,7 +9,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 enum taboptions {
-    case applying, tweaks, files, logs, memview, hwbp
+    case applying, tweaks, files, logs, memview, hwbp, web
 }
 
 let g_isunsupported: Bool = isunsupported()
@@ -65,6 +65,13 @@ struct lara: App {
                         Text("断点")
                     }
                     .tag(taboptions.hwbp)
+
+                WebRelayView()
+                    .tabItem {
+                        Image(systemName: "network")
+                        Text("网页")
+                    }
+                    .tag(taboptions.web)
                 
                 // this has gotta fucking go
                 TweaksView(mgr: mgr)

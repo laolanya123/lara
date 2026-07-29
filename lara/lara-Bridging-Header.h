@@ -11,6 +11,7 @@
 #import "utils.h"
 #import "memview_bridge.h"
 #import "hwbp_bridge.h"
+#import "krw_engine.h"
 #import "vnode.h"
 #import "apfs.h"
 #import "vfs.h"
