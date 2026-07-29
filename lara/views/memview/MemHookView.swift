@@ -9,6 +9,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct MemHookView: View {
     let vmmap: UInt64
