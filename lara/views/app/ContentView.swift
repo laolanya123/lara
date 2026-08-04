@@ -75,7 +75,7 @@ struct ContentView: View {
                     Image(systemName: "xmark.circle")
                 }
             }) {
-                Button("运行漏洞利用", action: {
+                Button("运行漏洞利用 (\(laramgr.exploitName))", action: {
                     offsets_init()
                     mgr.run()
                 })

@@ -98,6 +98,13 @@ final class laramgr: ObservableObject {
     static let fontpath = "/System/Library/Fonts/Core/SFUI.ttf"
     static let italicfontpath = "/System/Library/Fonts/Core/SFUIItalic.ttf"
     static let monofontpath = "/System/Library/Fonts/Core/SFUIMono.ttf"
+
+    // 按系统版本选择漏洞: iOS < 17 走 kfd, iOS >= 17 走 DarkSword
+    static var useKfdExploit: Bool {
+        ProcessInfo.processInfo.operatingSystemVersion.majorVersion < 17
+    }
+    static var exploitName: String { useKfdExploit ? "kfd" : "DarkSword" }
+    static var exploitTag: String { useKfdExploit ? "(kfd)" : "(ds)" }
     init() {}
 
     struct AppInfo {
@@ -117,11 +124,15 @@ final class laramgr: ObservableObject {
         dsprogress = 0.0
         log = ""
         
+        let useKfd = laramgr.useKfdExploit
+        let tag = laramgr.exploitTag
+        ds_set_exploit_tag(tag)
+        logmsg("\(tag) iOS \(ProcessInfo.processInfo.operatingSystemVersionString), 使用漏洞: \(laramgr.exploitName)")
         ds_set_log_callback { messageCStr in
             guard let messageCStr else { return }
             let message = String(cString: messageCStr)
             DispatchQueue.main.async {
-                laramgr.shared.logmsg("(ds) \(message)")
+                laramgr.shared.logmsg("\(laramgr.exploitTag) \(message)")
             }
         }
         ds_set_progress_callback { progress in
@@ -131,7 +142,7 @@ final class laramgr: ObservableObject {
         }
         
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let result = ds_run()
+            let result = useKfd ? kfd_run() : ds_run()
             
             DispatchQueue.main.async {
                 guard let self else { return }
@@ -142,12 +153,12 @@ final class laramgr: ObservableObject {
                     self.dsfailed = false
                     self.kernbase = ds_get_kernel_base()
                     self.kernslide = ds_get_kernel_slide()
-                    self.logmsg("\n(ds) exploit success!")
-                    self.logmsg(String(format: "(ds) kernel_base:  0x%llx", self.kernbase))
-                    self.logmsg(String(format: "(ds) kernel_slide: 0x%llx\n", self.kernslide))
-                    globallogger.log("(ds) exploit success!")
-                    globallogger.log(String(format: "(ds) kernel_base:  0x%llx", self.kernbase))
-                    globallogger.log(String(format: "(ds) kernel_slide: 0x%llx", self.kernslide))
+                    self.logmsg("\n\(tag) exploit success!")
+                    self.logmsg(String(format: "\(tag) kernel_base:  0x%llx", self.kernbase))
+                    self.logmsg(String(format: "\(tag) kernel_slide: 0x%llx\n", self.kernslide))
+                    globallogger.log("\(tag) exploit success!")
+                    globallogger.log(String(format: "\(tag) kernel_base:  0x%llx", self.kernbase))
+                    globallogger.log(String(format: "\(tag) kernel_slide: 0x%llx", self.kernslide))
                     globallogger.divider()
                 } else {
                     self.dsfailed = true

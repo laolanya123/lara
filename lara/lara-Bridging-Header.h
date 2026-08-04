@@ -7,6 +7,7 @@
 #import <Foundation/Foundation.h>
 
 #import "darksword.h"
+#import "kexploit/kfd/kfd_bridge.h"
 #import "offsets.h"
 #import "utils.h"
 #import "memview_bridge.h"
